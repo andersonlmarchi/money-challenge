@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wagering
+      POSTGRES_USER: wagering
+      POSTGRES_PASSWORD: wagering
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wagering -d wagering"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ministack:
+    image: ministackorg/ministack:latest
+    ports:
+      - "4566:4566"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4566/_ministack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.example
+    environment:
+      DATABASE_HOST: postgres
+      SQS_ENDPOINT: http://ministack:4566
+      SQS_WAGER_TRANSACTIONS_QUEUE_URL: http://ministack:4566/000000000000/wager-transactions.fifo
+      SQS_WAGER_TRANSACTIONS_DLQ_URL: http://ministack:4566/000000000000/wager-transactions-dlq.fifo
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ministack:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

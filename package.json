@@ -1,0 +1,49 @@
+{
+  "name": "money-challenge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/infrastructure/persistence/mikro-orm.config.ts",
+      "./dist/infrastructure/persistence/mikro-orm.config.js"
+    ]
+  },
+  "scripts": {
+    "build": "nest build",
+    "start": "bun run dist/main.js",
+    "start:dev": "nest start --watch",
+    "migration:up": "mikro-orm migration:up --config ./src/infrastructure/persistence/mikro-orm.config.ts",
+    "migration:down": "mikro-orm migration:down --config ./src/infrastructure/persistence/mikro-orm.config.ts",
+    "migration:create": "mikro-orm migration:create --config ./src/infrastructure/persistence/mikro-orm.config.ts",
+    "migration:pending": "mikro-orm migration:pending --config ./src/infrastructure/persistence/mikro-orm.config.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@mikro-orm/core": "6",
+    "@mikro-orm/migrations": "6",
+    "@mikro-orm/nestjs": "6",
+    "@mikro-orm/postgresql": "6",
+    "@mikro-orm/reflection": "6",
+    "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.0",
+    "@nestjs/core": "^12.0.1",
+    "@nestjs/platform-express": "^12.0.1",
+    "decimal.js": "^10.6.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "uuid": "^14.0.2"
+  },
+  "devDependencies": {
+    "@mikro-orm/cli": "6",
+    "@nestjs/cli": "^12.0.0",
+    "@nestjs/schematics": "^12.0.0",
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.4.1",
+    "@types/uuid": "^11.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.0"
+  }
+}
