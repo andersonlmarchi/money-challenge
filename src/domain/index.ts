@@ -2,3 +2,8 @@ export * from './money/index.js';
 export * from './enums/index.js';
 export * from './errors/index.js';
 export * from './events/index.js';
+export * from './wallet/index.js';
+export * from './wager-transaction/index.js';
+export * from './ledger/index.js';
+export * from './inbox/index.js';
+export * from './outbox/index.js';

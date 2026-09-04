@@ -11,9 +11,6 @@ export default defineConfig({
   entities: ['./dist/infrastructure/persistence/entities'],
   entitiesTs: ['./src/infrastructure/persistence/entities'],
   metadataProvider: TsMorphMetadataProvider,
-  discovery: {
-    warnWhenNoEntities: false,
-  },
   extensions: [Migrator],
   migrations: {
     path: './dist/infrastructure/persistence/migrations',
