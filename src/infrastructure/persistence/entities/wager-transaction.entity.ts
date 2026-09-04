@@ -1,6 +1,5 @@
-import { Entity, Index, ManyToOne, PrimaryKey, Property, Unique } from '@mikro-orm/core';
+import { Entity, Index, PrimaryKey, Property, Unique } from '@mikro-orm/core';
 import { MONEY_AMOUNT_TYPE } from '../types/money-amount.type.js';
-import { WalletEntity } from './wallet.entity.js';
 
 @Entity({ tableName: 'wager_transactions' })
 @Unique({ properties: ['idempotencyKey'] })
@@ -22,19 +21,16 @@ export class WagerTransactionEntity {
   @Property({ length: 64 })
   payloadHash!: string;
 
-  @ManyToOne(() => WalletEntity, { fieldName: 'wallet_id' })
-  wallet!: WalletEntity;
-
-  @Property({ type: 'uuid' })
+  @Property({ type: 'uuid', fieldName: 'wallet_id' })
   walletId!: string;
 
-  @Property({ type: 'uuid' })
+  @Property({ type: 'uuid', fieldName: 'player_id' })
   playerId!: string;
 
-  @Property()
+  @Property({ fieldName: 'round_id' })
   roundId!: string;
 
-  @Property()
+  @Property({ fieldName: 'game_id' })
   gameId!: string;
 
   @Property({ length: 32 })
@@ -46,27 +42,24 @@ export class WagerTransactionEntity {
   @Property({ length: 3 })
   currency!: string;
 
-  @Property({ nullable: true })
+  @Property({ nullable: true, fieldName: 'reference_external_transaction_id' })
   referenceExternalTransactionId?: string;
 
-  @ManyToOne(() => WagerTransactionEntity, { nullable: true, fieldName: 'reference_transaction_id' })
-  referenceTransaction?: WagerTransactionEntity;
-
-  @Property({ type: 'uuid', nullable: true })
+  @Property({ type: 'uuid', nullable: true, fieldName: 'reference_transaction_id' })
   referenceTransactionId?: string;
 
   @Property({ length: 32 })
   status!: string;
 
-  @Property({ length: 64, nullable: true })
+  @Property({ length: 64, nullable: true, fieldName: 'failure_code' })
   failureCode?: string;
 
-  @Property({ type: MONEY_AMOUNT_TYPE, nullable: true })
+  @Property({ type: MONEY_AMOUNT_TYPE, nullable: true, fieldName: 'observed_balance' })
   observedBalance?: string;
 
-  @Property({ columnType: 'timestamptz', nullable: true })
+  @Property({ columnType: 'timestamptz', nullable: true, fieldName: 'processed_at' })
   processedAt?: Date;
 
-  @Property({ columnType: 'timestamptz' })
+  @Property({ columnType: 'timestamptz', fieldName: 'created_at' })
   createdAt!: Date;
 }

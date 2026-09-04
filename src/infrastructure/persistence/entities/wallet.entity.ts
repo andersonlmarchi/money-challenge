@@ -7,7 +7,7 @@ export class WalletEntity {
   @PrimaryKey({ type: 'uuid' })
   id!: string;
 
-  @Property({ type: 'uuid' })
+  @Property({ type: 'uuid', fieldName: 'player_id' })
   playerId!: string;
 
   @Property({ length: 3 })
@@ -19,9 +19,9 @@ export class WalletEntity {
   @Property()
   version!: number;
 
-  @Property({ columnType: 'timestamptz' })
+  @Property({ columnType: 'timestamptz', fieldName: 'created_at' })
   createdAt!: Date;
 
-  @Property({ columnType: 'timestamptz', onUpdate: () => new Date() })
+  @Property({ columnType: 'timestamptz', fieldName: 'updated_at', onUpdate: () => new Date() })
   updatedAt!: Date;
 }

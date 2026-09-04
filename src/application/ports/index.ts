@@ -8,3 +8,5 @@ export type { InboxRepository } from './inbox.repository.js';
 export { INBOX_REPOSITORY } from './inbox.repository.js';
 export type { OutboxRepository } from './outbox.repository.js';
 export { OUTBOX_REPOSITORY } from './outbox.repository.js';
+export { UNIT_OF_WORK } from './unit-of-work.js';
+export type { UnitOfWork, TransactionalEntityManager } from './unit-of-work.js';

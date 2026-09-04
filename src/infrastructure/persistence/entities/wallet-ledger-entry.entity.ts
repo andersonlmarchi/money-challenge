@@ -1,7 +1,5 @@
-import { Entity, Index, ManyToOne, PrimaryKey, Property, Unique } from '@mikro-orm/core';
+import { Entity, Index, PrimaryKey, Property, Unique } from '@mikro-orm/core';
 import { MONEY_AMOUNT_TYPE } from '../types/money-amount.type.js';
-import { WalletEntity } from './wallet.entity.js';
-import { WagerTransactionEntity } from './wager-transaction.entity.js';
 
 @Entity({ tableName: 'wallet_ledger_entries' })
 @Unique({ properties: ['walletId', 'transactionId'] })
@@ -10,16 +8,10 @@ export class WalletLedgerEntryEntity {
   @PrimaryKey({ type: 'uuid' })
   id!: string;
 
-  @ManyToOne(() => WalletEntity, { fieldName: 'wallet_id' })
-  wallet!: WalletEntity;
-
-  @Property({ type: 'uuid' })
+  @Property({ type: 'uuid', fieldName: 'wallet_id' })
   walletId!: string;
 
-  @ManyToOne(() => WagerTransactionEntity, { fieldName: 'transaction_id' })
-  transaction!: WagerTransactionEntity;
-
-  @Property({ type: 'uuid' })
+  @Property({ type: 'uuid', fieldName: 'transaction_id' })
   transactionId!: string;
 
   @Property({ length: 16 })
@@ -31,12 +23,12 @@ export class WalletLedgerEntryEntity {
   @Property({ length: 3 })
   currency!: string;
 
-  @Property({ type: MONEY_AMOUNT_TYPE })
+  @Property({ type: MONEY_AMOUNT_TYPE, fieldName: 'balance_before' })
   balanceBefore!: string;
 
-  @Property({ type: MONEY_AMOUNT_TYPE })
+  @Property({ type: MONEY_AMOUNT_TYPE, fieldName: 'balance_after' })
   balanceAfter!: string;
 
-  @Property({ columnType: 'timestamptz' })
+  @Property({ columnType: 'timestamptz', fieldName: 'created_at' })
   createdAt!: Date;
 }

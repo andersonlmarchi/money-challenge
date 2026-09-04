@@ -18,7 +18,8 @@
     "migration:down": "mikro-orm migration:down --config ./src/infrastructure/persistence/mikro-orm.config.ts",
     "migration:create": "mikro-orm migration:create --config ./src/infrastructure/persistence/mikro-orm.config.ts",
     "migration:pending": "mikro-orm migration:pending --config ./src/infrastructure/persistence/mikro-orm.config.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:integration": "RUN_INTEGRATION_TESTS=true bun test test/integration"
   },
   "dependencies": {
     "@mikro-orm/core": "6",

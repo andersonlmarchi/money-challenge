@@ -83,6 +83,35 @@ export class WagerTransaction {
       );
     }
 
+    return WagerTransaction.newPending(props);
+  }
+
+  static createOpening(props: {
+    id: string;
+    walletId: string;
+    playerId: string;
+    money: Money;
+    idempotencyKey: string;
+    payloadHash: string;
+    createdAt?: Date;
+  }): WagerTransaction {
+    return WagerTransaction.newPending({
+      id: props.id,
+      providerId: 'internal',
+      externalTransactionId: props.id,
+      idempotencyKey: props.idempotencyKey,
+      payloadHash: props.payloadHash,
+      walletId: props.walletId,
+      playerId: props.playerId,
+      roundId: 'opening',
+      gameId: 'wallet-open',
+      kind: WagerTransactionKind.Opening,
+      money: props.money,
+      createdAt: props.createdAt,
+    });
+  }
+
+  private static newPending(props: CreateWagerTransactionProps): WagerTransaction {
     return new WagerTransaction(
       props.id,
       props.providerId,
