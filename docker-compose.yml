@@ -38,6 +38,7 @@ services:
       SQS_ENDPOINT: http://ministack:4566
       SQS_WAGER_TRANSACTIONS_QUEUE_URL: http://ministack:4566/000000000000/wager-transactions.fifo
       SQS_WAGER_TRANSACTIONS_DLQ_URL: http://ministack:4566/000000000000/wager-transactions-dlq.fifo
+      SQS_INTEGRATION_EVENTS_QUEUE_URL: http://ministack:4566/000000000000/integration-events.fifo
     depends_on:
       postgres:
         condition: service_healthy
