@@ -4,12 +4,16 @@ import { WalletNotFoundError } from '../../domain/errors/index.js';
 import type { ReconcileWalletCommand, ReconcileWalletResult } from '../dtos/finance.dtos.js';
 import { FinanceGateway } from '../../infrastructure/persistence/gateways/finance.gateway.js';
 import { MikroOrmUnitOfWork } from '../../infrastructure/persistence/unit-of-work.js';
+import { MetricsService } from '../../infrastructure/observability/metrics.service.js';
 
 @Injectable()
 export class ReconcileWalletUseCase {
   private readonly logger = new Logger(ReconcileWalletUseCase.name);
 
-  constructor(private readonly unitOfWork: MikroOrmUnitOfWork) {}
+  constructor(
+    private readonly unitOfWork: MikroOrmUnitOfWork,
+    private readonly metrics: MetricsService,
+  ) {}
 
   async execute(command: ReconcileWalletCommand): Promise<ReconcileWalletResult> {
     return this.unitOfWork.transactional(async (em) => {
@@ -30,6 +34,7 @@ export class ReconcileWalletUseCase {
       const consistent = difference.isZero();
 
       if (!consistent) {
+        this.metrics.recordReconciliationMismatch();
         this.logger.warn(
           `Wallet reconciliation mismatch walletId=${wallet.id} stored=${storedBalance.toAmountString()} calculated=${calculatedBalance.toAmountString()} difference=${difference.toAmountString()}`,
         );

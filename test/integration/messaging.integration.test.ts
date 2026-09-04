@@ -6,6 +6,7 @@ import { OpenWalletUseCase } from '../../src/application/use-cases/open-wallet.u
 import { ProcessInboundWagerMessageUseCase } from '../../src/application/use-cases/process-inbound-wager-message.use-case.js';
 import { PublishOutboxWorker } from '../../src/application/workers/publish-outbox.worker.js';
 import { WagerTransactionConsumer } from '../../src/application/workers/wager-transaction.consumer.js';
+import { MetricsService } from '../../src/infrastructure/observability/metrics.service.js';
 import { MikroOrmUnitOfWork } from '../../src/infrastructure/persistence/unit-of-work.js';
 import type { WagerTransactionRequestedMessage } from '../../src/application/dtos/messaging.dtos.js';
 import {
@@ -61,8 +62,8 @@ describe.skipIf(!runMessaging)('Messaging integration (PostgreSQL + MiniStack SQ
     unitOfWork = new MikroOrmUnitOfWork(orm.em);
     openWallet = new OpenWalletUseCase(unitOfWork);
     processInbound = new ProcessInboundWagerMessageUseCase(unitOfWork);
-    publishOutbox = new PublishOutboxWorker(unitOfWork);
-    consumer = new WagerTransactionConsumer(processInbound);
+    publishOutbox = new PublishOutboxWorker(unitOfWork, new MetricsService());
+    consumer = new WagerTransactionConsumer(processInbound, new MetricsService());
   });
 
   afterAll(async () => {

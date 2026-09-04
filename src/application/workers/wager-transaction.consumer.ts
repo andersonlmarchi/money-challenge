@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { loadMessagingConfig } from '../../infrastructure/messaging/messaging.config.js';
 import { SqsClientWrapper } from '../../infrastructure/messaging/sqs.client.js';
+import { MetricsService } from '../../infrastructure/observability/metrics.service.js';
 import {
   InvalidMessageError,
   parseWagerTransactionMessage,
@@ -30,7 +31,10 @@ export class WagerTransactionConsumer implements OnModuleInit, OnModuleDestroy {
   private inFlight = 0;
   private readonly inFlightMessages = new Map<string, InFlightMessage>();
 
-  constructor(private readonly processInbound: ProcessInboundWagerMessageUseCase) {}
+  constructor(
+    private readonly processInbound: ProcessInboundWagerMessageUseCase,
+    private readonly metrics: MetricsService,
+  ) {}
 
   onModuleInit(): void {
     if (!this.config.enabled) {
@@ -158,6 +162,7 @@ export class WagerTransactionConsumer implements OnModuleInit, OnModuleDestroy {
       await this.sqs.sendToDlq(body, messageId, `${messageId}:dlq`);
     }
     await this.sqs.deleteMessage(this.config.wagerTransactionsQueueUrl, receiptHandle);
+    this.metrics.recordDlqMessage();
     this.logger.warn(`Moved message to DLQ messageId=${messageId} reason=${reason ?? 'unknown'}`);
   }
 

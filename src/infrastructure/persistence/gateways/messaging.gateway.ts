@@ -112,6 +112,13 @@ export class MessagingGateway {
     );
   }
 
+  async countPendingOutbox(): Promise<number> {
+    const rows = await this.em.getConnection().execute<Array<{ count: string }>>(
+      `SELECT COUNT(*)::text AS count FROM outbox_messages WHERE published_at IS NULL`,
+    );
+    return Number(rows[0]?.count ?? 0);
+  }
+
   async updateOutbox(message: OutboxMessage): Promise<void> {
     let entity = await this.em.findOne(OutboxMessageEntity, { id: message.id });
     if (!entity) {

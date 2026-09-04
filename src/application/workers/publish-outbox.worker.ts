@@ -8,6 +8,7 @@ import { loadMessagingConfig } from '../../infrastructure/messaging/messaging.co
 import { SqsClientWrapper } from '../../infrastructure/messaging/sqs.client.js';
 import { MessagingGateway } from '../../infrastructure/persistence/gateways/messaging.gateway.js';
 import { MikroOrmUnitOfWork } from '../../infrastructure/persistence/unit-of-work.js';
+import { MetricsService } from '../../infrastructure/observability/metrics.service.js';
 
 @Injectable()
 export class PublishOutboxWorker implements OnModuleInit, OnModuleDestroy {
@@ -16,7 +17,10 @@ export class PublishOutboxWorker implements OnModuleInit, OnModuleDestroy {
   private readonly sqs = new SqsClientWrapper(this.config);
   private timer: ReturnType<typeof setInterval> | undefined;
 
-  constructor(private readonly unitOfWork: MikroOrmUnitOfWork) {}
+  constructor(
+    private readonly unitOfWork: MikroOrmUnitOfWork,
+    private readonly metrics: MetricsService,
+  ) {}
 
   onModuleInit(): void {
     if (!this.config.enabled) {
@@ -67,6 +71,12 @@ export class PublishOutboxWorker implements OnModuleInit, OnModuleDestroy {
         }
       }
     });
+
+    const pendingCount = await this.unitOfWork.transactional(async (em) => {
+      const gateway = new MessagingGateway(em);
+      return gateway.countPendingOutbox();
+    });
+    this.metrics.setOutboxPending(pendingCount);
 
     return publishedCount;
   }

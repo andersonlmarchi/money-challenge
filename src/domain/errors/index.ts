@@ -22,3 +22,7 @@ export class DuplicateWalletError extends DomainError {}
 export class ReferenceNotFoundError extends DomainError {}
 
 export class InvalidReferenceError extends DomainError {}
+
+export class TransactionNotFoundError extends DomainError {}
+
+export class InvalidPayloadError extends DomainError {}

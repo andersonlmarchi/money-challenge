@@ -13,6 +13,10 @@ import { PersistenceModule } from '../../infrastructure/persistence/persistence.
     ReconcileWalletUseCase,
     ReprocessPendingReferenceWorker,
   ],
-  exports: [OpenWalletUseCase, ProcessWagerTransactionUseCase, ReconcileWalletUseCase],
+  exports: [
+    OpenWalletUseCase,
+    ProcessWagerTransactionUseCase,
+    ReconcileWalletUseCase,
+  ],
 })
 export class FinanceModule {}

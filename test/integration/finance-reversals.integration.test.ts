@@ -8,6 +8,7 @@ import {
 import { OpenWalletUseCase } from '../../src/application/use-cases/open-wallet.use-case.js';
 import { ProcessWagerTransactionUseCase } from '../../src/application/use-cases/process-wager-transaction.use-case.js';
 import { ReconcileWalletUseCase } from '../../src/application/use-cases/reconcile-wallet.use-case.js';
+import { MetricsService } from '../../src/infrastructure/observability/metrics.service.js';
 import { ReprocessPendingReferenceWorker } from '../../src/application/workers/reprocess-pending-reference.worker.js';
 import { MikroOrmUnitOfWork } from '../../src/infrastructure/persistence/unit-of-work.js';
 import {
@@ -32,7 +33,7 @@ describe.skipIf(!runIntegration)('Finance reversals integration (PostgreSQL)', (
     unitOfWork = new MikroOrmUnitOfWork(orm.em);
     openWallet = new OpenWalletUseCase(unitOfWork);
     processWager = new ProcessWagerTransactionUseCase(unitOfWork);
-    reconcileWallet = new ReconcileWalletUseCase(unitOfWork);
+    reconcileWallet = new ReconcileWalletUseCase(unitOfWork, new MetricsService());
     pendingReferenceWorker = new ReprocessPendingReferenceWorker(unitOfWork);
   });
 
