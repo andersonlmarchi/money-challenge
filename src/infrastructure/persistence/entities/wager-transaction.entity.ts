@@ -62,4 +62,10 @@ export class WagerTransactionEntity {
 
   @Property({ columnType: 'timestamptz', fieldName: 'created_at' })
   createdAt!: Date;
+
+  @Property({ default: 0, fieldName: 'reference_retry_attempts' })
+  referenceRetryAttempts!: number;
+
+  @Property({ columnType: 'timestamptz', nullable: true, fieldName: 'next_reference_attempt_at' })
+  nextReferenceAttemptAt?: Date;
 }

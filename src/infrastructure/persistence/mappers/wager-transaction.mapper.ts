@@ -29,6 +29,8 @@ export function wagerTransactionToDomain(entity: WagerTransactionEntity): WagerT
       : undefined,
     processedAt: entity.processedAt,
     createdAt: entity.createdAt,
+    referenceRetryAttempts: entity.referenceRetryAttempts,
+    nextReferenceAttemptAt: entity.nextReferenceAttemptAt,
   });
 }
 
@@ -53,6 +55,8 @@ export function wagerTransactionToEntity(transaction: WagerTransaction): WagerTr
   entity.observedBalance = transaction.observedBalance?.toAmountString();
   entity.processedAt = transaction.processedAt;
   entity.createdAt = transaction.createdAt;
+  entity.referenceRetryAttempts = transaction.referenceRetryAttempts;
+  entity.nextReferenceAttemptAt = transaction.nextReferenceAttemptAt;
   return entity;
 }
 
@@ -65,4 +69,6 @@ export function applyWagerTransactionToEntity(
   entity.failureCode = transaction.failureCode;
   entity.observedBalance = transaction.observedBalance?.toAmountString();
   entity.processedAt = transaction.processedAt;
+  entity.referenceRetryAttempts = transaction.referenceRetryAttempts;
+  entity.nextReferenceAttemptAt = transaction.nextReferenceAttemptAt;
 }

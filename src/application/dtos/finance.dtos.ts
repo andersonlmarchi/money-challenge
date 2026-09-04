@@ -22,6 +22,7 @@ export interface ProcessWagerTransactionCommand {
   gameId: string;
   kind: string;
   money: MoneyProps;
+  referenceExternalTransactionId?: string;
   correlationId?: string;
 }
 
@@ -31,4 +32,17 @@ export interface ProcessWagerTransactionResult {
   balance?: MoneyProps;
   failureCode?: string;
   idempotentReplay: boolean;
+}
+
+export interface ReconcileWalletCommand {
+  walletId: string;
+}
+
+export interface ReconcileWalletResult {
+  walletId: string;
+  storedBalance: MoneyProps;
+  calculatedBalance: MoneyProps;
+  difference: MoneyProps;
+  consistent: boolean;
+  checkedEntries: number;
 }

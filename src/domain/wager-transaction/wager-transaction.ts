@@ -20,6 +20,8 @@ export interface CreateWagerTransactionProps {
   kind: WagerTransactionKind;
   money: Money;
   referenceExternalTransactionId?: string;
+  referenceRetryAttempts?: number;
+  nextReferenceAttemptAt?: Date;
   createdAt?: Date;
 }
 
@@ -42,6 +44,8 @@ export interface WagerTransactionState {
   observedBalance?: Money;
   processedAt?: Date;
   createdAt: Date;
+  referenceRetryAttempts?: number;
+  nextReferenceAttemptAt?: Date;
 }
 
 const TERMINAL_STATUSES = new Set<WagerTransactionStatus>([
@@ -70,6 +74,8 @@ export class WagerTransaction {
     private _failureCode?: FailureCode,
     private _observedBalance?: Money,
     private _processedAt?: Date,
+    private _referenceRetryAttempts = 0,
+    private _nextReferenceAttemptAt?: Date,
   ) {}
 
   static create(props: CreateWagerTransactionProps): WagerTransaction {
@@ -127,6 +133,12 @@ export class WagerTransaction {
       props.referenceExternalTransactionId,
       props.createdAt ?? new Date(),
       WagerTransactionStatus.Pending,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      props.referenceRetryAttempts ?? 0,
+      props.nextReferenceAttemptAt,
     );
   }
 
@@ -150,7 +162,36 @@ export class WagerTransaction {
       state.failureCode,
       state.observedBalance,
       state.processedAt,
+      state.referenceRetryAttempts ?? 0,
+      state.nextReferenceAttemptAt,
     );
+  }
+
+  get referenceRetryAttempts(): number {
+    return this._referenceRetryAttempts;
+  }
+
+  get nextReferenceAttemptAt(): Date | undefined {
+    return this._nextReferenceAttemptAt;
+  }
+
+  isReferenceRetryDue(now: Date): boolean {
+    if (this._status !== WagerTransactionStatus.PendingReference) {
+      return false;
+    }
+    if (!this._nextReferenceAttemptAt) {
+      return true;
+    }
+    return this._nextReferenceAttemptAt.getTime() <= now.getTime();
+  }
+
+  scheduleReferenceRetry(now: Date, delayMs: number): void {
+    this._referenceRetryAttempts += 1;
+    this._nextReferenceAttemptAt = new Date(now.getTime() + delayMs);
+  }
+
+  clearReferenceRetrySchedule(): void {
+    this._nextReferenceAttemptAt = undefined;
   }
 
   get status(): WagerTransactionStatus {

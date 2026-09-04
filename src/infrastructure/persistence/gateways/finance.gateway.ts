@@ -1,4 +1,9 @@
 import type { EntityManager } from '@mikro-orm/postgresql';
+import { LockMode } from '@mikro-orm/core';
+import {
+  WagerTransactionKind,
+  WagerTransactionStatus,
+} from '../../../domain/enums/index.js';
 import { WagerTransaction } from '../../../domain/wager-transaction/index.js';
 import { Wallet } from '../../../domain/wallet/index.js';
 import { WalletLedgerEntry } from '../../../domain/ledger/index.js';
@@ -32,6 +37,93 @@ export class FinanceGateway {
     applyWalletToEntity(wallet, entity);
   }
 
+  async findWalletByIdForUpdate(walletId: string): Promise<Wallet | null> {
+    const entity = await this.em.findOne(
+      WalletEntity,
+      { id: walletId },
+      { lockMode: LockMode.PESSIMISTIC_WRITE },
+    );
+    return entity ? walletToDomain(entity) : null;
+  }
+
+  async findReferenceTransaction(
+    providerId: string,
+    referenceExternalTransactionId: string,
+  ): Promise<WagerTransaction | null> {
+    const entity = await this.em.findOne(WagerTransactionEntity, {
+      providerId,
+      externalTransactionId: referenceExternalTransactionId,
+    });
+    return entity ? wagerTransactionToDomain(entity) : null;
+  }
+
+  async findProcessedReversal(
+    referenceTransactionId: string,
+    kind: WagerTransactionKind.Refund | WagerTransactionKind.Rollback,
+  ): Promise<WagerTransaction | null> {
+    const entity = await this.em.findOne(WagerTransactionEntity, {
+      referenceTransactionId,
+      kind,
+      status: WagerTransactionStatus.Processed,
+    });
+    return entity ? wagerTransactionToDomain(entity) : null;
+  }
+
+  async findDuePendingReferenceTransactions(
+    now: Date,
+    limit: number,
+  ): Promise<WagerTransaction[]> {
+    const entities = await this.em.find(
+      WagerTransactionEntity,
+      {
+        status: WagerTransactionStatus.PendingReference,
+        $or: [{ nextReferenceAttemptAt: null }, { nextReferenceAttemptAt: { $lte: now } }],
+      },
+      {
+        orderBy: { createdAt: 'ASC' },
+        limit,
+        lockMode: LockMode.PESSIMISTIC_WRITE,
+      },
+    );
+    return entities.map(wagerTransactionToDomain);
+  }
+
+  async getWalletBalance(walletId: string): Promise<string | null> {
+    const rows = await this.em.getConnection().execute<Array<{ balance: string }>>(
+      `SELECT balance::text AS balance FROM wallets WHERE id = ?::uuid`,
+      [walletId],
+    );
+    return rows[0]?.balance ?? null;
+  }
+
+  async sumLedgerNet(walletId: string, currency: string): Promise<string> {
+    const rows = await this.em.getConnection().execute<Array<{ net: string }>>(
+      `
+        SELECT COALESCE(
+          SUM(
+            CASE
+              WHEN direction = 'CREDIT' THEN amount
+              WHEN direction = 'DEBIT' THEN -amount
+            END
+          ),
+          0
+        )::text AS net
+        FROM wallet_ledger_entries
+        WHERE wallet_id = ?::uuid AND currency = ?
+      `,
+      [walletId, currency],
+    );
+    return rows[0]?.net ?? '0.00';
+  }
+
+  async countLedgerEntries(walletId: string): Promise<number> {
+    const rows = await this.em.getConnection().execute<Array<{ count: string }>>(
+      `SELECT COUNT(*)::text AS count FROM wallet_ledger_entries WHERE wallet_id = ?::uuid`,
+      [walletId],
+    );
+    return Number(rows[0]?.count ?? 0);
+  }
+
   async findWalletById(walletId: string): Promise<Wallet | null> {
     const entity = await this.em.findOne(WalletEntity, { id: walletId });
     return entity ? walletToDomain(entity) : null;
@@ -55,8 +147,9 @@ export class FinanceGateway {
           id, provider_id, external_transaction_id, idempotency_key, payload_hash,
           wallet_id, player_id, round_id, game_id, kind, amount, currency,
           reference_external_transaction_id, reference_transaction_id, status,
-          failure_code, observed_balance, processed_at, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          failure_code, observed_balance, processed_at, created_at,
+          reference_retry_attempts, next_reference_attempt_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT (idempotency_key) DO NOTHING
         RETURNING id
       `,
@@ -80,6 +173,8 @@ export class FinanceGateway {
         entity.observedBalance ?? null,
         entity.processedAt ?? null,
         entity.createdAt,
+        entity.referenceRetryAttempts ?? 0,
+        entity.nextReferenceAttemptAt ?? null,
       ],
     );
 
