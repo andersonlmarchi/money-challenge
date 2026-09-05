@@ -46,13 +46,33 @@ describe.skipIf(!runConcurrency)('Multi-instance concurrency', () => {
           cmd: ['bun', workerPath, wallet.id, playerId, `bet-instance-${index}`],
           stdout: 'pipe',
           stderr: 'pipe',
-          env: process.env,
+          env: { ...process.env, NODE_ENV: 'production' },
         }),
       ),
     );
 
     const outputs = await Promise.all(
-      processes.map(async (proc) => JSON.parse(await new Response(proc.stdout).text())),
+      processes.map(async (proc) => {
+        const [stdout, stderr, exitCode] = await Promise.all([
+          new Response(proc.stdout).text(),
+          new Response(proc.stderr).text(),
+          proc.exited,
+        ]);
+        if (exitCode !== 0) {
+          throw new Error(
+            `Worker exited with code ${exitCode}\nstdout:\n${stdout}\nstderr:\n${stderr}`,
+          );
+        }
+        const jsonLine = stdout
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.startsWith('{'))
+          .at(-1);
+        if (!jsonLine) {
+          throw new Error(`Worker produced no JSON output\nstdout:\n${stdout}\nstderr:\n${stderr}`);
+        }
+        return JSON.parse(jsonLine);
+      }),
     );
 
     const processed = outputs.filter(

@@ -1,7 +1,6 @@
-import { v7 as uuidv7 } from 'uuid';
-import { ProcessWagerTransactionUseCase } from '../../src/application/use-cases/process-wager-transaction.use-case.js';
-import { MikroOrmUnitOfWork } from '../../src/infrastructure/persistence/unit-of-work.js';
-import { getTestOrm, closeTestOrm } from '../integration/setup.js';
+import { ProcessWagerTransactionUseCase } from '../../../src/application/use-cases/process-wager-transaction.use-case.js';
+import { MikroOrmUnitOfWork } from '../../../src/infrastructure/persistence/unit-of-work.js';
+import { getTestOrm, closeTestOrm } from '../../integration/setup.js';
 
 const walletId = process.argv[2];
 const playerId = process.argv[3];
