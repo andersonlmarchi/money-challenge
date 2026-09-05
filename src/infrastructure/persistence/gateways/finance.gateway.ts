@@ -32,9 +32,10 @@ export class FinanceGateway {
     let entity = await this.em.findOne(WalletEntity, { id: wallet.id });
     if (!entity) {
       this.em.persist(walletToEntity(wallet));
-      return;
+    } else {
+      applyWalletToEntity(wallet, entity);
     }
-    applyWalletToEntity(wallet, entity);
+    await this.em.flush();
   }
 
   async findWalletByIdForUpdate(walletId: string): Promise<Wallet | null> {
@@ -89,7 +90,7 @@ export class FinanceGateway {
   }
 
   async getWalletBalance(walletId: string): Promise<string | null> {
-    const rows = await this.em.getConnection().execute<Array<{ balance: string }>>(
+    const rows = await this.em.execute<Array<{ balance: string }>>(
       `SELECT balance::text AS balance FROM wallets WHERE id = ?::uuid`,
       [walletId],
     );
@@ -97,7 +98,7 @@ export class FinanceGateway {
   }
 
   async sumLedgerNet(walletId: string, currency: string): Promise<string> {
-    const rows = await this.em.getConnection().execute<Array<{ net: string }>>(
+    const rows = await this.em.execute<Array<{ net: string }>>(
       `
         SELECT COALESCE(
           SUM(
@@ -117,7 +118,7 @@ export class FinanceGateway {
   }
 
   async countLedgerEntries(walletId: string): Promise<number> {
-    const rows = await this.em.getConnection().execute<Array<{ count: string }>>(
+    const rows = await this.em.execute<Array<{ count: string }>>(
       `SELECT COUNT(*)::text AS count FROM wallet_ledger_entries WHERE wallet_id = ?::uuid`,
       [walletId],
     );
@@ -141,7 +142,7 @@ export class FinanceGateway {
     transaction: WagerTransaction,
   ): Promise<'inserted' | 'conflict'> {
     const entity = wagerTransactionToEntity(transaction);
-    const rows = await this.em.getConnection().execute<Array<{ id: string }>>(
+    const rows = await this.em.execute<Array<{ id: string }>>(
       `
         INSERT INTO wager_transactions (
           id, provider_id, external_transaction_id, idempotency_key, payload_hash,
@@ -197,7 +198,7 @@ export class FinanceGateway {
     walletId: string,
     amount: string,
   ): Promise<AtomicWalletUpdateResult | null> {
-    const rows = await this.em.getConnection().execute<
+    const rows = await this.em.execute<
       Array<{ balance: string; version: number; updated_at: Date }>
     >(
       `
@@ -228,7 +229,7 @@ export class FinanceGateway {
     walletId: string,
     amount: string,
   ): Promise<AtomicWalletUpdateResult | null> {
-    const rows = await this.em.getConnection().execute<
+    const rows = await this.em.execute<
       Array<{ balance: string; version: number; updated_at: Date }>
     >(
       `
@@ -263,7 +264,7 @@ export class FinanceGateway {
   }
 
   async countLedgerEntriesForTransaction(transactionId: string): Promise<number> {
-    const rows = await this.em.getConnection().execute<Array<{ count: string }>>(
+    const rows = await this.em.execute<Array<{ count: string }>>(
       `SELECT COUNT(*)::text AS count FROM wallet_ledger_entries WHERE transaction_id = ?::uuid`,
       [transactionId],
     );
@@ -271,7 +272,7 @@ export class FinanceGateway {
   }
 
   async countOutboxForAggregate(aggregateId: string, eventType: string): Promise<number> {
-    const rows = await this.em.getConnection().execute<Array<{ count: string }>>(
+    const rows = await this.em.execute<Array<{ count: string }>>(
       `
         SELECT COUNT(*)::text AS count
         FROM outbox_messages

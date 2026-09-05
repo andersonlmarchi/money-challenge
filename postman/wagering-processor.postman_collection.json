@@ -1,0 +1,162 @@
+{
+  "info": {
+    "name": "Wagering Processor API",
+    "description": "Smoke tests for the HTTP API (Docker Compose on localhost:3000). Run requests in folder order.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "playerId", "value": "0192f28f-5dc0-7d58-bdb2-814ad6a0f4a1" },
+    { "key": "walletId", "value": "" },
+    { "key": "transactionId", "value": "" },
+    { "key": "externalTransactionId", "value": "bet-postman-1" },
+    { "key": "idempotencyKey", "value": "provider-a:bet-postman-1" }
+  ],
+  "item": [
+    {
+      "name": "01 - Health Live",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health/live"
+      }
+    },
+    {
+      "name": "02 - Health Ready",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health/ready"
+      }
+    },
+    {
+      "name": "03 - Create Wallet",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('walletId', body.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"playerId\": \"{{playerId}}\",\n  \"initialBalance\": { \"amount\": \"100.00\", \"currency\": \"BRL\" }\n}"
+        },
+        "url": "{{baseUrl}}/wallets"
+      }
+    },
+    {
+      "name": "04 - Get Wallet",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/wallets/{{walletId}}"
+      }
+    },
+    {
+      "name": "05 - BET (processed)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('transactionId', body.transactionId);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerId\": \"provider-a\",\n  \"externalTransactionId\": \"{{externalTransactionId}}\",\n  \"playerId\": \"{{playerId}}\",\n  \"walletId\": \"{{walletId}}\",\n  \"roundId\": \"round-1\",\n  \"gameId\": \"fortune-chimp\",\n  \"kind\": \"BET\",\n  \"money\": { \"amount\": \"25.00\", \"currency\": \"BRL\" }\n}"
+        },
+        "url": "{{baseUrl}}/wagering/transactions"
+      }
+    },
+    {
+      "name": "06 - BET Idempotent Replay",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Idempotency-Key", "value": "{{idempotencyKey}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerId\": \"provider-a\",\n  \"externalTransactionId\": \"{{externalTransactionId}}\",\n  \"playerId\": \"{{playerId}}\",\n  \"walletId\": \"{{walletId}}\",\n  \"roundId\": \"round-1\",\n  \"gameId\": \"fortune-chimp\",\n  \"kind\": \"BET\",\n  \"money\": { \"amount\": \"25.00\", \"currency\": \"BRL\" }\n}"
+        },
+        "url": "{{baseUrl}}/wagering/transactions"
+      }
+    },
+    {
+      "name": "07 - BET Insufficient Balance (422)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Idempotency-Key", "value": "provider-a:bet-postman-reject" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerId\": \"provider-a\",\n  \"externalTransactionId\": \"bet-postman-reject\",\n  \"playerId\": \"{{playerId}}\",\n  \"walletId\": \"{{walletId}}\",\n  \"roundId\": \"round-1\",\n  \"gameId\": \"fortune-chimp\",\n  \"kind\": \"BET\",\n  \"money\": { \"amount\": \"80.00\", \"currency\": \"BRL\" }\n}"
+        },
+        "url": "{{baseUrl}}/wagering/transactions"
+      }
+    },
+    {
+      "name": "08 - Wallet Ledger",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/wallets/{{walletId}}/ledger?limit=10"
+      }
+    },
+    {
+      "name": "09 - Reconciliation",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/wallets/{{walletId}}/reconciliation"
+      }
+    },
+    {
+      "name": "10 - Get Transaction by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/wagering/transactions/{{transactionId}}"
+      }
+    },
+    {
+      "name": "11 - Get Transaction by External ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/providers/provider-a/wagering/transactions/{{externalTransactionId}}"
+      }
+    },
+    {
+      "name": "12 - Metrics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/metrics"
+      }
+    }
+  ]
+}

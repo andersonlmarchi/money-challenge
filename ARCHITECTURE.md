@@ -103,6 +103,21 @@ Recursos de ordenação/dedup do SQS FIFO são otimização; o banco é a fonte 
 - Multi-moeda por player: uma wallet por `(playerId, currency)`
 - Testes de integração/concorrência exigem PostgreSQL e MiniStack reais (sem mocks)
 
+## Testes manuais da API (Postman)
+
+Collection em `postman/wagering-processor.postman_collection.json` para validar a stack rodando via Docker Compose (`http://localhost:3000`).
+
+Importe no Postman ou no Insomnia (formato Collection v2.1) e execute os requests **na ordem numérica** da pasta (01 → 12). O request **03 - Create Wallet** grava `walletId` na variável da collection; o **05 - BET** grava `transactionId`.
+
+Variáveis padrão da collection:
+
+| Variável | Valor inicial |
+|---|---|
+| `baseUrl` | `http://localhost:3000` |
+| `playerId` | UUID fixo de exemplo |
+
+Pré-requisito: `docker compose up` com `app`, `postgres` e `ministack` healthy. Migrations rodam no entrypoint do container `app`.
+
 ## Invariante de testes
 
 Em todos os testes de integração e concorrência:

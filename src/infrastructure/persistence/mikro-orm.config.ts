@@ -1,6 +1,21 @@
+import { ReflectMetadataProvider } from '@mikro-orm/core';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
-import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
+import {
+  InboxMessageEntity,
+  OutboxMessageEntity,
+  WalletEntity,
+  WalletLedgerEntryEntity,
+  WagerTransactionEntity,
+} from './entities/index.js';
+
+const entities = [
+  WalletEntity,
+  WagerTransactionEntity,
+  WalletLedgerEntryEntity,
+  InboxMessageEntity,
+  OutboxMessageEntity,
+];
 
 export default defineConfig({
   host: process.env['DATABASE_HOST'] ?? 'localhost',
@@ -8,9 +23,8 @@ export default defineConfig({
   dbName: process.env['DATABASE_NAME'] ?? 'wagering',
   user: process.env['DATABASE_USER'] ?? 'wagering',
   password: process.env['DATABASE_PASSWORD'] ?? 'wagering',
-  entities: ['./dist/infrastructure/persistence/entities'],
-  entitiesTs: ['./src/infrastructure/persistence/entities'],
-  metadataProvider: TsMorphMetadataProvider,
+  entities,
+  metadataProvider: ReflectMetadataProvider,
   extensions: [Migrator],
   migrations: {
     path: './dist/infrastructure/persistence/migrations',
@@ -19,5 +33,5 @@ export default defineConfig({
     disableForeignKeys: false,
     allOrNothing: true,
   },
-  debug: process.env['NODE_ENV'] === 'development',
+  debug: process.env['NODE_ENV'] !== 'production',
 });

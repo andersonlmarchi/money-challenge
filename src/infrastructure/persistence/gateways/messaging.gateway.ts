@@ -25,7 +25,7 @@ export class MessagingGateway {
   constructor(private readonly em: EntityManager) {}
 
   async insertInboxOrGet(message: InboxMessage): Promise<InboxInsertResult> {
-    const rows = await this.em.getConnection().execute<Array<{ message_id: string }>>(
+    const rows = await this.em.execute<Array<{ message_id: string }>>(
       `
         INSERT INTO inbox_messages (consumer_name, message_id, payload_hash, received_at)
         VALUES (?, ?, ?, ?)
@@ -66,7 +66,7 @@ export class MessagingGateway {
   }
 
   async claimPendingOutboxMessages(now: Date, limit: number): Promise<OutboxMessage[]> {
-    const rows = await this.em.getConnection().execute<
+    const rows = await this.em.execute<
       Array<{
         id: string;
         aggregate_id: string;
@@ -113,7 +113,7 @@ export class MessagingGateway {
   }
 
   async countPendingOutbox(): Promise<number> {
-    const rows = await this.em.getConnection().execute<Array<{ count: string }>>(
+    const rows = await this.em.execute<Array<{ count: string }>>(
       `SELECT COUNT(*)::text AS count FROM outbox_messages WHERE published_at IS NULL`,
     );
     return Number(rows[0]?.count ?? 0);

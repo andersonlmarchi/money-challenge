@@ -15,6 +15,7 @@
     "start": "bun run dist/main.js",
     "start:dev": "nest start --watch",
     "migration:up": "mikro-orm migration:up --config ./src/infrastructure/persistence/mikro-orm.config.ts",
+    "migration:up:prod": "mikro-orm migration:up --config ./dist/infrastructure/persistence/mikro-orm.config.js",
     "migration:down": "mikro-orm migration:down --config ./src/infrastructure/persistence/mikro-orm.config.ts",
     "migration:create": "mikro-orm migration:create --config ./src/infrastructure/persistence/mikro-orm.config.ts",
     "migration:pending": "mikro-orm migration:pending --config ./src/infrastructure/persistence/mikro-orm.config.ts",
